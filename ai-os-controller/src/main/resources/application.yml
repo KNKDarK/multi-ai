@@ -1,0 +1,94 @@
+spring:
+  application:
+    name: ai-os-controller
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+ai-os:
+  scheduler:
+    # Auto-drain: a virtual-thread drainer executes queued tasks as soon as the
+    # dispatch slot frees, instead of waiting for the next submit() to drain them.
+    # Benchmarked in-process: cuts p50 drain latency for same-model follow-up requests
+    # from "until some future request arrives" (unbounded) to milliseconds.
+    # Set false to restore the strict legacy single-shot drain behavior.
+    auto-drain: true
+  agents:
+    coding:
+      default-model: coding-small
+    research:
+      default-model: research-small
+    data:
+      default-model: data-small
+    writing:
+      default-model: writing-small
+  llama:
+    port: 8099
+    binary-path: /home/knk/models/llama.cpp/build/bin/llama-server
+    model-dir: /home/knk/models
+    start-timeout: 60s
+    # Measured on RX 6500 (Vulkan1): ngl=16 reached 14.292 tok/s versus
+    # 12.759 tok/s at ngl=99; batch/ubatch and 6 threads were the best tested
+    # low-memory configuration. Re-run the benchmark when the GPU changes.
+    device: Vulkan1
+    gpu-layers: 16
+    threads: 6
+    batch-size: 128
+    ubatch-size: 64
+    # First-request budget: measured generation on this hardware is ~12 tok/s
+    # (Vulkan1, Q4 7B). Default max-tokens=512 therefore generates in ~43s;
+    # adding ~14s cold model load gives a ~90s total budget. Do not raise
+    # request-timeout and max-tokens together without re-benchmarking.
+    request-timeout: 90s
+    max-tokens: 512
+    warmup:
+      # Run a tiny inference (load + generate) at startup and keep Actuator health
+      # DOWN until it succeeds. This makes the first real user request warm and
+      # ensures readiness never reports healthy before inference actually works.
+      # Measured: TTFT is instant (0.003s) even cold on Vulkan1, so this exists for
+      # correctness/readiness honesty, not shader warmup.
+      enabled: true
+      model-id: coding-small
+      prompt: "Reply with exactly: OK"
+  model-manager:
+    # 10 min: measured swap latency is ~3.2s (evict+reload of Q4 7B GGUF).
+    # Shorter timeouts (5m) cause unnecessary reloads during bursty request patterns.
+    # Longer timeouts (30m+) waste VRAM when no requests are active.
+    # 10 min balances VRAM reclamation with avoiding re-load thrashing.
+    # If all agents share the same GGUF, set the same catalog key for each
+    # to eliminate swaps entirely (0ms load on every request).
+    idle-timeout: 10m
+    idle-check-interval: 10s
+    vram-poll-interval: 5s
+    rocm-smi-binary: rocm-smi
+    model-sizes: {}
+    # Each agent's default-model maps to a catalog key here.
+    # The ModelManager tracks residency by resolved GGUF path: mapping different
+    # keys to the SAME file reuses the resident llama-server process (no
+    # evict+reload) — this is what keeps the shared single model warm across all
+    # agents. Mapping keys to genuinely different files still swaps on a key
+    # change (single 4GB VRAM budget). Defaults below map all keys to the single
+    # GGUF installed on this machine so any request resolves a real model file
+    # and agent switches are zero-cost.
+    model-catalog:
+      coding-small: Qwen2.5-7B-Instruct-Q4_K_M.gguf
+      coding-medium: Qwen2.5-7B-Instruct-Q4_K_M.gguf
+      research-small: Qwen2.5-7B-Instruct-Q4_K_M.gguf
+      data-small: Qwen2.5-7B-Instruct-Q4_K_M.gguf
+      writing-small: Qwen2.5-7B-Instruct-Q4_K_M.gguf
+  embed:
+    port: 8100
+    run-script: ../python-services/embed-service/run.sh
+    start-timeout: 60s
+    idle-timeout: 5m
+    idle-check-interval: 10s

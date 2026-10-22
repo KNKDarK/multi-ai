@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: ai-os-controller
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+ai-os:
+  agents:
+    coding:
+      default-model: coding-small
+    research:
+      default-model: research-small
+    data:
+      default-model: data-small
+    writing:
+      default-model: writing-small
+  llama:
+    port: 8099
+    binary-path: llama-server
+    model-dir: ./models
+    start-timeout: 60s
+    request-timeout: 90s
+    max-tokens: 512
+    warmup:
+      # Warmup performs real inference against a live backend; a unit-test context
+      # must never attempt it (avoids races with /health MockMvc tests and
+      # unnecessary llama-server spawns).
+      enabled: false
+      model-id: coding-small
+  model-manager:
+    idle-timeout: 5m
+    idle-check-interval: 24h
+    vram-poll-interval: 24h
+    rocm-smi-binary: rocm-smi
+    model-sizes: {}
+    model-catalog:
+      coding-small: coding-small.gguf
+      coding-medium: coding-medium.gguf
+      research-small: research-small.gguf
+      data-small: data-small.gguf
+      writing-small: writing-small.gguf

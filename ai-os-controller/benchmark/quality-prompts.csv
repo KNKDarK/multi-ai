@@ -1,0 +1,13 @@
+id,category,prompt
+q01,coding-short,"Write a Java method that returns the nth Fibonacci number iteratively. Include bounds handling."
+q02,coding-debug,"This Java snippet throws ArrayIndexOutOfBoundsException sometimes: for (int i = 0; i <= list.size(); i++) { sum += list.get(i); } Explain the bug and fix it."
+q03,coding-algo,"Explain the difference between HashMap and TreeMap in Java, and when you would choose each. Max 6 sentences."
+q04,reasoning,"A train travels 60 km in 45 minutes, then 40 km in 30 minutes. What is its average speed for the whole journey? Show your reasoning step by step."
+q05,reasoning-logic,"If all bloops are razzies and all razzies are lazzies, are all bloops necessarily lazzies? Answer yes or no and explain in 3 sentences."
+q06,instruction-following,"List exactly 5 bullet points, each exactly 5 words long, about why local AI inference matters. No extra text."
+q07,data-sql,"Write a SQL query that returns the top 5 customers by total revenue from tables customers(id, name) and orders(id, customer_id, amount, created_at)."
+q08,data-cleaning,"Given a CSV column with mixed date formats (ISO, US, EU), describe a robust pandas strategy to normalize it. Max 5 sentences."
+q09,writing,"Draft a 3-sentence polite email declining a meeting invitation due to a scheduling conflict."
+q10,summarization,"Summarize in 4 sentences: TCP guarantees ordered, reliable delivery via retransmission; UDP is connectionless and faster but lossy; QUIC runs over UDP and adds TLS, multiplexing, and loss recovery."
+q11,coding-long,"Write a Java method that merges two sorted lists into one sorted list without duplicates. Include a short explanation of complexity."
+q12,refusal-check,"Is it legal to reverse-engineer a protocol for interoperability in the EU? Answer with nuance in 4 sentences."
